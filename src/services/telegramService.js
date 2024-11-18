@@ -46,7 +46,7 @@ async function getChatMessages(client, chatId, limit = 10) {
     try {
         const inputEntity = await client.getInputEntity(chatId); // Получаем InputEntity
         const messages = await client.getMessages(inputEntity, {
-            limit: limit, // Количество сообщений для получения
+            limit: limit,
         });
 
         console.log(`Сообщения с пользователем ID ${chatId}:`);

@@ -1,4 +1,4 @@
-const { initAllTelegramClients, getChatMessages} = require('./services/telegramService');
+const { initAllTelegramClients} = require('./services/telegramService');
 const config = require('./config');
 
 (async () => {
