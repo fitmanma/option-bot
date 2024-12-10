@@ -42,6 +42,16 @@ async function initAllTelegramClients(config) {
   return clients
 }
 
+async function getUserId(client) {
+  try {
+    const user = await client.getMe()
+    return user.id
+  } catch (error) {
+    console.error('Ошибка при получении ID пользователя:', error)
+    return null
+  }
+}
+
 async function getChatMessages(client, chatId, limit = 10) {
   try {
     const inputEntity = await client.getInputEntity(chatId) // Получаем InputEntity
@@ -60,4 +70,52 @@ async function getChatMessages(client, chatId, limit = 10) {
   }
 }
 
-module.exports = { initAllTelegramClients, getChatMessages }
+async function parseAndForwardMessages(sourceClient, targetClient, sourceChatId, targetChatId) {
+  try {
+    // Убедимся, что все сущности доступны
+    await sourceClient.getDialogs()
+    await targetClient.getDialogs()
+
+    const sourceEntity = await sourceClient.getInputEntity(sourceChatId)
+    const sourceChannelInfo = await sourceClient.getEntity(sourceChatId)
+    const targetEntity = await targetClient.getInputEntity(targetChatId)
+    const targetChannelInfo = await targetClient.getEntity(targetChatId)
+
+    sourceClient.addEventHandler(async (event) => {
+      if (event.message && event.message.peerId.channelId) {
+        if (event.message.peerId.channelId.value === sourceEntity.channelId.value) {
+          console.log(`Получено сообщение из группы: ${event.message.message}`)
+
+          let messageText = event.message.message || ''
+          let additionalText = '\n\n👉 Write to me: @Natan_Sharp_AI_TRADING'
+
+          const mentionRegex = /@[\w_]+/g
+          if (mentionRegex.test(messageText)) {
+            console.log('Обнаружено упоминание в сообщении.')
+
+            messageText = messageText.replace(mentionRegex, '@Natan_Sharp_AI_TRADING')
+            additionalText = ''
+          }
+
+          if (event.message.media) {
+            await targetClient.sendFile(targetEntity, {
+              file: event.message.media,
+              caption: messageText + additionalText,
+            })
+          } else {
+            await targetClient.sendMessage(targetEntity, {
+              message: messageText + additionalText,
+            })
+          }
+          console.log(`Сообщение отправлено в целевую группу/канал.`)
+        }
+      }
+    })
+
+    console.log(`Парсим сообщения из группы ${sourceChannelInfo.title} и отправляем в ${targetChannelInfo.title}.`)
+  } catch (error) {
+    console.error('Ошибка при парсинге и пересылке сообщений:', error)
+  }
+}
+
+module.exports = { initAllTelegramClients, getChatMessages, getUserId, parseAndForwardMessages }
