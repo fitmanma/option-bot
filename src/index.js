@@ -1,23 +1,24 @@
-const { initAllTelegramClients} = require('./services/telegramService');
-const config = require('./config');
+const { initAllTelegramClients } = require('./services/telegramService')
+const config = require('./config')
 
-(async () => {
-    try {
-        const clients = await initAllTelegramClients(config);
+;(async () => {
+  try {
+    const clients = await initAllTelegramClients(config)
 
-        if (clients.length === 0) {
-            console.log('Не удалось инициализировать ни одного пользователя.');
-        } else {
-            for (const { client } of clients) {
-                const dialogs = await client.getDialogs();
+    if (clients.length === 0) {
+      console.log('Не удалось инициализировать ни одного пользователя.')
+    } else {
+      for (const { client } of clients) {
+        console.log('====')
 
-                dialogs.find(dialog => {
-                    console.log(dialog.name, dialog.id.value);
-                });
-            }
+        const dialogs = await client.getDialogs()
 
-        }
-    } catch (error) {
-        console.error('Ошибка при инициализации клиентов Telegram:', error);
+        dialogs.find((dialog) => {
+          console.log(dialog.name, dialog.id.value)
+        })
+      }
     }
-})();
+  } catch (error) {
+    console.error('Ошибка при инициализации клиентов Telegram:', error)
+  }
+})()
